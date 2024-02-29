@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import * as jwt_decode from "jwt-decode" // Import jwt_decode library
 import UserAvatar from './UserAvatar'; // Import your UserAvatar component
 import "./Navbar.css";
+import * as jwt_decode from "jwt-decode";
 
 function CustomerNavbar() {
     const [user, setUser] = useState(null);
@@ -11,8 +11,7 @@ function CustomerNavbar() {
         const token = localStorage.getItem("jwt");
 
         if (token) {
-            const decoded = jwt_decode.default(token); // Use jwt_decode.default to access the default export
-            console.log('user info:', decoded)
+            const decoded = jwt_decode.default(token);
             setUser(decoded);
         }
     }, []);
@@ -37,17 +36,7 @@ function CustomerNavbar() {
                 </div>
 
                 <div className="nav-buttons">
-                    {user ? (
-                        // If user data is available, render UserAvatar
-                        <UserAvatar firstName={user.firstName} lastName={user.lastName} />
-                    ) : (
-                        // Otherwise, render "Sign up" and "Login" buttons
-                        <li>
-                            <Link to="/signup"><button>Sign up</button></Link>
-                            <Link to="/login"><button>Login</button></Link>
-                        </li>
-                    )
-                    }
+                    <UserAvatar/>
                 </div>
             </div>
         </div>

@@ -17,13 +17,17 @@ function Login() {
 
         try {
             const response = await axios.post("http://localhost:8000/login", { email, password });
-            const { token } = response.data;
-            const firstname = "Damilola"
+            const { token, firstname, lastname, phonenumber, role } = response.data;
+            
 
             
 
             localStorage.setItem("token", token);
             localStorage.setItem("firstname", firstname);
+            localStorage.setItem("lastname", lastname);
+            localStorage.setItem("phonenumber", phonenumber);
+            localStorage.setItem("role", role);
+           
             
             if (response.data.role === "customer") {
                 // Redirect to customer page

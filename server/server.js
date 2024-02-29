@@ -83,7 +83,7 @@ app.post('/login', async (req, res) => {
             'strong_random_secret', { expiresIn: '1h' });
 
         // Return user role and token if login is successful
-        res.json({ role: user.role, token });
+        res.json({ role: user.role, token, firstname: user.firstname, lastname: user.lastname, email: user.email, phonenumber: user.phonenumber });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ error: 'Internal Server Error' });
