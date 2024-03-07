@@ -23,7 +23,7 @@ async function getUserByEmail(email) {
     const query = 'SELECT * FROM users WHERE email = $1';
     try {
         const result = await pool.query(query, [email]);
-        return result.rows[0]; // Return user if found, otherwise return undefined
+        return result.rows[0];
     } catch (error) {
         throw error;
     }
@@ -38,7 +38,7 @@ async function createUser(userDetails) {
     `;
     try {
         const result = await pool.query(query, [firstname, lastname, email, role, password, phonenumber]);
-        return result.rows[0]; // return the newly created user
+        return result.rows[0];
     } catch (error) {
         throw error;
     }

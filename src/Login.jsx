@@ -17,7 +17,7 @@ function Login() {
 
         try {
             const response = await axios.post("http://localhost:8000/login", { email, password });
-            const { token, firstname, lastname, phonenumber, role } = response.data;
+            const { token, firstname, lastname, phonenumber, role, email: userEmail } = response.data;
             
 
             
@@ -27,6 +27,7 @@ function Login() {
             localStorage.setItem("lastname", lastname);
             localStorage.setItem("phonenumber", phonenumber);
             localStorage.setItem("role", role);
+            localStorage.setItem("email", userEmail);
            
             
             if (response.data.role === "customer") {

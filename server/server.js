@@ -5,6 +5,8 @@ const pool = require('./db')
 const cors = require('cors')
 const User = require('./models/Users')
 const jwt = require('jsonwebtoken')
+const { getUserByEmail, createUser } = require('./models/Users');
+
 
 app.use(express.json());
 
@@ -89,6 +91,41 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
+app.post('/signup', async (req, res) => {
+    try {
+        const { firstname, lastname, email, role, password, phoneNumber } = req.body;
+
+        // Check if user with the same email already exists
+        const existingUser = await getUserByEmail(email);
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+
+        // Create new user if email doesn't exist
+        const newUser = await createUser({ firstname, lastname, email, role, password, phoneNumber });
+        res.status(201).json(newUser);
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/users/:email', async (req, res) => {
+    const { email } = req.params;
+    try {
+        const user = await getUserByEmail(email);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 app.get('/protected', verifyToken, (req, res) => {
     res.json(req.user);

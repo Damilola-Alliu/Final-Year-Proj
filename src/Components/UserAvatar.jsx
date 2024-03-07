@@ -22,12 +22,12 @@ const UserAvatar = () => {
     }
 
     const handleProfileClick = () => {
-        window.location.href('/profile')
+        window.location.href = '/profile'
     }
 
     const handleLogoutClick = () => {
         localStorage.clear();
-        window.location.href('/home')
+        window.location.href = '/'
         
     }
 

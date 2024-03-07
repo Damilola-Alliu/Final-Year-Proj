@@ -22,6 +22,7 @@ function Signup() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log(formData.phoneNumber)
 
         try {
             const response = await axios.post("http://localhost:8000/signup", formData);
@@ -94,7 +95,7 @@ function Signup() {
 
                         <label htmlFor="phoneNumber">Phone Number</label>
                         <input
-                            type="number"
+                            type="text"
                             placeholder="Enter Phone Number"
                             name="phoneNumber"
                             value={formData.phoneNumber}

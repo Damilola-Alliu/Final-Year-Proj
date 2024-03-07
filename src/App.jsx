@@ -7,6 +7,8 @@ import Login from "./Login";
 import Dashboard from "./Dashboard";
 import CustomerHome from "./CustomerHome"
 import ServiceProvider from "./ServiceProvider"
+import Profile from "./profile"
+
 
 export default function App() {
   return (
@@ -19,6 +21,7 @@ export default function App() {
         <Route path = "/dashboard" element={<Dashboard />} />
         <Route path="/customer" element={<CustomerHome />} />
         <Route path="/service-provider" element={<ServiceProvider />} />
+        <Route path="/profile" element={<Profile />} />
         
       </Routes>
     </Router>
