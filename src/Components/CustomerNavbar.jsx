@@ -30,7 +30,8 @@ function CustomerNavbar() {
 
             <div className="right-section">
                 <div className="nav-links">
-                    <NavItem to="">Bio</NavItem>
+                    {/* <NavItem to="">Bio</NavItem> */}
+
                     <NavItem to="">Messages</NavItem>
                     <NavItem to="">Orders</NavItem>
                 </div>

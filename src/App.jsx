@@ -8,6 +8,7 @@ import Dashboard from "./Dashboard";
 import CustomerHome from "./CustomerHome"
 import ServiceProvider from "./ServiceProvider"
 import Profile from "./profile"
+import Bio from "./Bio";
 
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/customer" element={<CustomerHome />} />
         <Route path="/service-provider" element={<ServiceProvider />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/bio" element={<Bio />} />
         
       </Routes>
     </Router>
