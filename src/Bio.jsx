@@ -6,13 +6,17 @@ import PlacesAutocomplete, { geocodeByAddress, getLatLng } from 'react-places-au
 
 function Bio() {
     const [email, setEmail] = useState('');
+    const [profilePhoto, setProfilePhoto] = useState(null);
+    const [location, setLocation] = useState('');
+    const [services, setServices] = useState([""]);
+    const [hourlyRate, setHourlyRate] = useState('');
     const [address, setAddress] = useState('');
     const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: 'AIzaSyBjeXfzoSOWJbGMFA3YkvY-fUHaxSi_yBc',
+        googleMapsApiKey: 'YOUR_API_KEY',
     });
-
+    
     useEffect(() => {
         // Retrieve email from localStorage
         const storedEmail = localStorage.getItem('email');
@@ -36,18 +40,23 @@ function Bio() {
         }
     };
 
+    
     const handleServiceChange = (index, value) => {
         const updatedServices = [...services];
         updatedServices[index] = value;
-        setServices(updatedServices);
+        setServices(updatedServices.slice(0, 3)); // Ensure there are only 3 items max
+    };
+
+    const addServiceField = () => {
+        if (services.length < 3) {
+            setServices([...services, ""]);
+        }
     };
 
     const handleProfilePhotoChange = (event) => {
         const photoFile = event.target.files[0];
-        setProfilePhoto(photoFile);
+        // handle profile photo upload
     };
-
-    const [services, setServices] = useState(["", "", ""]); // Initialize with three empty strings
 
     return (
         <>
@@ -67,7 +76,7 @@ function Bio() {
                         value={email}
                         onChange={handleEmailChange}
                         required
-                        disabled // Disable input field since email is fetched from localStorage
+                        disabled
                     />
 
                     <label htmlFor="profile_photo">Profile Photo</label>
@@ -121,39 +130,26 @@ function Bio() {
                         ></GoogleMap>
                     )}
 
-<label htmlFor="services1">Service 1</label>
-                    <input
-                        type="text"
-                        placeholder="Enter Service 1"
-                        value={services[0]}
-                        onChange={(e) => handleServiceChange(0, e.target.value)}
-                        required
-                    />
+                    {services.map((service, index) => (
+                        <div key={index}>
+                            <label htmlFor={`service-${index}`}>Service {index + 1}</label>
+                            <input
+                                type="text"
+                                placeholder={`Enter Service ${index + 1}`}
+                                value={service}
+                                onChange={(e) => handleServiceChange(index, e.target.value)}
+                                required
+                            />
+                        </div>
+                    ))}
 
-                    <label htmlFor="services2">Service 2</label>
-                    <input
-                        type="text"
-                        placeholder="Enter Service 2"
-                        value={services[1]}
-                        onChange={(e) => handleServiceChange(1, e.target.value)}
-                        required
-                    />
-
-                    <label htmlFor="services3">Service 3</label>
-                    <input
-                        type="text"
-                        placeholder="Enter Service 3"
-                        value={services[2]}
-                        onChange={(e) => handleServiceChange(2, e.target.value)}
-                        
-                    />
-
+                    <button type="button" onClick={addServiceField}>Add Service</button>
+<br /><br /><br />
                     <label htmlFor="hourly_rate">Hourly Rate</label>
                     <input
                         type="number"
                         placeholder="Enter Hourly Rate"
                         name="hourly_rate"
-                        
                     />
 
                     <button type="submit">Update</button>

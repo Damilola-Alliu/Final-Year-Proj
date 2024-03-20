@@ -1,22 +1,23 @@
 const pool = require('../db');
 
 
-async function createServiceroviderTable()  {
+async function createServiceProviderTable()  {
     const query = `
-    CREATE TABLE IF NOT EXISTS service_provider(
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) REFERENCES users(email),
-    profile_photo VARCHAR(255),
-    provided_services TEXT[],
-    hourly_rates JSONB,
-    availability_calendar JSONB
+    CREATE TABLE IF NOT EXISTS service_provider (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) REFERENCES users(email),
+        profile_photo VARCHAR(255),
+        location VARCHAR(255),
+        provided_services TEXT[],
+        hourly_rate INTEGER,
+        availability_calendar JSONB
     )
     `;
     
     try {
         await pool.query(query);
-        console.log("User table created successfully");
+        console.log("Service Provider table created successfully");
     } catch (error) {
-        console.error("Error creating user table:", error);
+        console.error("Error creating service provider table:", error);
     }
 }
