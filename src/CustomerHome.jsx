@@ -17,7 +17,7 @@ function CustomerHome() {
     // Function to handle search submission
     const handleSearchSubmit = () => {
         // Navigate to the search results page with the search query as a URL parameter
-        navigate(`/search-results?query=${searchQuery}`);
+        navigate(`/search-results?query=${encodeURIComponent(searchQuery)}`); // encode the query
     };
 
     return (

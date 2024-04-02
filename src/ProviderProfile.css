@@ -1,0 +1,15 @@
+.provider-container{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid #ccc;
+    width: 450px;
+    height: 400px;
+    text-align: center;
+    border-radius: 15px;
+}
+
+.provider-container h2{
+    margin-top: 45px;
+}

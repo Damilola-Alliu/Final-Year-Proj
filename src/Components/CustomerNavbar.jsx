@@ -34,6 +34,7 @@ function CustomerNavbar() {
                     <NavItem to="/customer">Home</NavItem>
                     <NavItem to="">Messages</NavItem>
                     <NavItem to="">Orders</NavItem>
+                    <NavItem to ="/sp">Service Providers</NavItem>
                     
                 </div>
 

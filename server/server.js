@@ -6,6 +6,8 @@ const cors = require('cors')
 const User = require('./models/Users')
 const jwt = require('jsonwebtoken')
 const { getUserByEmail, createUser } = require('./models/Users');
+const {getServiceProviders} = require('./models/ServiceProvider')
+const {getAllServiceProviders} = require('./models/ServiceProvider')
 
 
 app.use(express.json());
@@ -56,6 +58,22 @@ app.get('/users', async (req, res) => {
     }
 })
 
+app.get('/users/:email', async (req, res) => {
+    const email = req.params.email;
+
+    try {
+        const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (user.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(user.rows[0]); // Return the first (and only) user found
+    } catch (error) {
+        console.error("Error fetching user by ID:", error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
@@ -68,11 +86,11 @@ app.post('/login', async (req, res) => {
         }
 
         // Generate JWT token
-        console.log('User email:', user.email)
-        console.log('User role:', user.role)
-        console.log('User firstname:', user.firstname)
-        console.log('User lastname:', user.lastname)
-        console.log('User phoneNumber:', user.phonenumber)
+        // console.log('User email:', user.email)
+        // console.log('User role:', user.role)
+        // console.log('User firstname:', user.firstname)
+        // console.log('User lastname:', user.lastname)
+        // console.log('User phoneNumber:', user.phonenumber)
 
         const token = jwt.sign({
             email: user.email, 
@@ -125,6 +143,55 @@ app.get('/users/:email', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
+// app.get('/api/service-providers', async (req, res) => {
+//     try {
+//         console.log("Request object:", req);
+//         const { query } = req.query; // Retrieve the query parameter
+//         console.log("Received search query:", query); // Log the received search query
+
+//         // Fetch service providers based on the search query
+//         const serviceProviders = await getServiceProviders(query);
+//         console.log("Fetched service providers:", serviceProviders); // Log the fetched service providers
+
+//         // Send the fetched service providers as the response
+//         res.json(serviceProviders);
+//     } catch (error) {
+//         console.error("Error fetching service providers:", error);
+//         res.status(500).json({ error: "Internal Server Error" });
+//     }
+// });
+
+
+app.get('/service-providers', async (req, res) => {
+    try {
+        // Fetch all service providers
+        const serviceProviders = await getAllServiceProviders();
+        res.json(serviceProviders);
+        //console.log(serviceProviders)
+    } catch (error) {
+        console.error("Error fetching service providers:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get('/service-providers/:email', async (req, res) => {
+    const { email } = req.params;
+
+    try {
+        // Fetch the service provider based on the email
+        const serviceProvider = await pool.query('SELECT * FROM service_provider WHERE email = $1', [email]);
+        if (serviceProvider.rows.length === 0) {
+            return res.status(404).json({ error: 'Service provider not found' });
+        }
+        res.json(serviceProvider.rows[0]); // Return the first (and only) service provider found
+    } catch (error) {
+        console.error("Error fetching service provider by email:", error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 
 
 app.get('/protected', verifyToken, (req, res) => {
