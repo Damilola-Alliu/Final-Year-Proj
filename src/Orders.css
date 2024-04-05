@@ -1,0 +1,13 @@
+.Page_title{
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 150px;
+    margin-left: 250px;
+}
+
+.booking-item{
+    margin-left: 300px;
+    margin-top: 50px;
+    border: 2px solid #ccc;
+    width: 500px;
+}

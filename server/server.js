@@ -1,14 +1,40 @@
-const PORT = process.env.PORT ?? 8000
-const express = require('express')
-const app = express()
-const pool = require('./db')
-const cors = require('cors')
-const User = require('./models/Users')
-const jwt = require('jsonwebtoken')
+const PORT = process.env.PORT ?? 8000;
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const pool = require('./db');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+
 const { getUserByEmail, createUser } = require('./models/Users');
 const {getServiceProviders} = require('./models/ServiceProvider')
 const {getAllServiceProviders} = require('./models/ServiceProvider')
+const User = require('./models/Users')
 
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.json());
+app.use(cors());
+
+// Add your existing routes and middleware here
+
+wss.on('connection', (ws) => {
+  console.log('A client connected');
+  
+  ws.on('message', (message) => {
+    console.log('Received message:', message);
+    
+    // Process the message and send a response if needed
+    ws.send('Message received!');
+  });
+  
+  ws.on('close', () => {
+    console.log('A client disconnected');
+  });
+});
 
 app.use(express.json());
 
@@ -192,6 +218,81 @@ app.get('/service-providers/:email', async (req, res) => {
     }
 });
 
+
+app.post('/bookings', async (req, res) => {
+
+    //const websocketId = generateUniqueId();
+
+    try {
+      // Extract data from the request body
+      const { customerEmail, serviceProviderEmail, date, time, notes, status } = req.body;
+  
+      // Create a new booking in the database
+      const newBooking = await pool.query(
+        'INSERT INTO bookings (customer_email, service_provider_email, date, time, notes, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [customerEmail, serviceProviderEmail, date, time, notes, status]
+      );
+  
+      // Retrieve WebSocket connection ID of the booked service provider from the database
+      const serviceProvider = await pool.query(
+        'SELECT websocket_id FROM service_provider WHERE email = $1',
+        [serviceProviderEmail]
+      );
+  
+      // Send notification only to the WebSocket connection of the booked service provider
+      if (serviceProvider.rows.length > 0) {
+        const websocketConnectionId = serviceProvider.rows[0].websocket_id;
+        wss.clients.forEach((client) => {
+          if (client.id === websocketConnectionId && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'booking', data: newBooking.rows[0] }));
+          }
+        });
+      }
+  
+      // Return the newly created booking
+      res.status(201).json(newBooking.rows[0]);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      res.status(500).json({ error: 'An unexpected error occurred' });
+    }
+  });
+
+// Endpoint to get bookings by specific email
+app.get('/bookings/service-provider/:email', async (req, res) => {
+    const { email } = req.params;
+    //console.log(email)
+
+    try {
+        // Query the database to get bookings for the specific email
+        const bookings = await pool.query('SELECT * FROM bookings WHERE service_provider_email = $1', [email]);
+
+        // Return the bookings
+        res.json(bookings.rows);
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/bookings/customer_email/:email', async (req, res) => {
+    const { email } = req.params;
+    console.log(email)
+
+    try {
+        // Query the database to get bookings for the specific email
+        const bookings = await pool.query('SELECT * FROM bookings WHERE customer_email = $1', [email]);
+
+        // Return the bookings
+        res.json(bookings.rows);
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+
+  
 
 
 app.get('/protected', verifyToken, (req, res) => {

@@ -30,7 +30,9 @@
     "react-dom": "^18.2.0",
     "react-places-autocomplete": "^7.3.0",
     "react-router-dom": "^6.22.3",
-    "sequelize": "^6.37.1"
+    "sequelize": "^6.37.1",
+    "socket.io": "^4.7.5",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",

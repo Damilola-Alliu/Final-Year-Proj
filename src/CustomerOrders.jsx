@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import Service_ProvierNavbar from "./Components/Service-ProviderNavbar";
+import CustomerNavbar from "./Components/CustomerNavbar";
 import axios from 'axios'; // Import Axios for making HTTP requests
-import "./Orders.css"
+import "./CustomerOrders.css"
 
-function Orders() {
+function CustomerOrders() {
     const [bookings, setBookings] = useState([]);
 
     // Function to fetch bookings for the logged-in service provider
     const fetchBookings = async () => {
         try {
             // Replace 'loggedInServiceProviderEmail' with the email of the logged-in service provider
-            const sp_email = localStorage.getItem('email')
-            const loggedInServiceProviderEmail = sp_email;
+            const customer_email = localStorage.getItem('email')
+            const loggedInCustomerEmail = customer_email;
 
             // Make a GET request to fetch bookings for the logged-in service provider
-            const response = await axios.get(`http://localhost:8000/bookings/service-provider/${loggedInServiceProviderEmail}`);
+            const response = await axios.get(`http://localhost:8000/bookings/customer_email/${loggedInCustomerEmail}`);
             console.log(response.data)
 
             // Set the retrieved bookings in the state
@@ -31,19 +31,19 @@ function Orders() {
     }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
 
 
-    const AcceptTask = () => {
-        console.log('Task Accepted')
-    }
+    // const AcceptTask = () => {
+    //     console.log('Task Accepted')
+    // }
 
-    const DeclineTask = () => {
-        console.log('Task Declined')
-    }
+    // const DeclineTask = () => {
+    //     console.log('Task Declined')
+    // }
 
     return (
         <>
             <div className="orders-page">
                 <div>
-                    <Service_ProvierNavbar />
+                    <CustomerNavbar />
                 </div>
                 <div className="Page_title">
                     Your Orders
@@ -62,10 +62,10 @@ function Orders() {
 
                         <br /> <br />
                         
-                        <div className="Decline_Accept_button">
+                        {/* <div className="Decline_Accept_button">
                             <button onClick={AcceptTask}>Accept</button>
                             <button onClick={DeclineTask}>Decline</button>
-                        </div>
+                        </div> */}
                         
                     </div>
                 ))}
@@ -74,4 +74,4 @@ function Orders() {
     );
 }
 
-export default Orders;
+export default CustomerOrders;

@@ -29,7 +29,7 @@ function Service_ProvierNavbar() {
             <div className="right-section">
                 <div className="nav-links">
                     <NavItem to="/service-provider">Dasboard</NavItem>
-                    <NavItem to="/yed">Orders</NavItem>
+                    <NavItem to="/orders">Orders</NavItem>
                     <NavItem to="">Calender</NavItem>
                     <NavItem to="">Payments</NavItem>
                     <NavItem to="">Comleted Jobs</NavItem>

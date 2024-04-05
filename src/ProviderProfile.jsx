@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import CustomerNavbar from "./Components/CustomerNavbar";
 import "./ProviderProfile.css";
-import { Link } from "react-router-dom"
 
 function ProviderProfile() {
     const { email } = useParams();
@@ -32,15 +31,9 @@ function ProviderProfile() {
         return <div>Loading...</div>;
     }
 
-    //const firstProvider = providerProfile2[0];
-
-    const ChatMeBtn = () => {
-        console.log("Chat Activated");
-    };
-
     const BookMeBtn = () => {
-        console.log("Booking form Opened")
-    }
+        console.log("Booking form opened")
+    };
 
     return (
         <>
@@ -55,18 +48,10 @@ function ProviderProfile() {
                 <br />
 
                 <div className="btn">
-
-                    <Link to = "/booking">
-                    <button>Book Me</button>
+                    <Link to={`/booking/${email}`}>
+                        <button onClick={BookMeBtn}>Book Me</button>
                     </Link>
-                    <br />
-                    <br />
-                <button onClick={ChatMeBtn}>Chat Me</button> 
-                <br />
-                <br />
-                  
                 </div>
-
             </div>
         </>
     );

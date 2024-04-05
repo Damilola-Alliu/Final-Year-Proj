@@ -13,6 +13,8 @@ import SearchResults from "./search-results";
 import ServiceProvidersList from "./ServiceProvidersList";
 import ProviderProfile from "./ProviderProfile";
 import BookingForm from "./BookingForm";
+import Orders from "./Orders"
+import CustomerOrder from "./CustomerOrders"
 
 export default function App() {
   return (
@@ -30,9 +32,9 @@ export default function App() {
         <Route path="/search-results" element={<SearchResults />} />
         <Route path="/sp" element={<ServiceProvidersList />} />
         <Route path="/providerprofile/:email" element={<ProviderProfile />} />
-        <Route path="/booking" element={<BookingForm />} />
-
-        
+        <Route path="/booking/:email" element={<BookingForm />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/customer_orders" element={<CustomerOrder />} />
       </Routes>
     </Router>
   );
