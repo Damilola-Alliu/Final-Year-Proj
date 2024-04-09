@@ -245,42 +245,36 @@ app.get('/service-providers/:email', async (req, res) => {
 
 
 app.post('/bookings', async (req, res) => {
-
-    //const websocketId = generateUniqueId();
-
     try {
-      // Extract data from the request body
-      const { customerEmail, serviceProviderEmail, date, time, notes, status } = req.body;
-  
-      // Create a new booking in the database
-      const newBooking = await pool.query(
-        'INSERT INTO bookings (customer_email, service_provider_email, date, time, notes, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [customerEmail, serviceProviderEmail, date, time, notes, status]
-      );
-  
-      // Retrieve WebSocket connection ID of the booked service provider from the database
-      const serviceProvider = await pool.query(
-        'SELECT websocket_id FROM service_provider WHERE email = $1',
-        [serviceProviderEmail]
-      );
-  
-      // Send notification only to the WebSocket connection of the booked service provider
-      if (serviceProvider.rows.length > 0) {
-        const websocketConnectionId = serviceProvider.rows[0].websocket_id;
-        wss.clients.forEach((client) => {
-          if (client.id === websocketConnectionId && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'booking', data: newBooking.rows[0] }));
-          }
-        });
-      }
-  
-      // Return the newly created booking
-      res.status(201).json(newBooking.rows[0]);
+        // Extract data from the request body
+        const { customerEmail, serviceProviderEmail, date, time, notes, status } = req.body;
+        
+        // Create a new booking in the database
+        const newBooking = await pool.query(
+            'INSERT INTO bookings (customer_email, service_provider_email, date, time, notes, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [customerEmail, serviceProviderEmail, date, time, notes, status]
+        );
+
+        // Retrieve the email addresses of the customer and service provider
+        const customer = await pool.query('SELECT email FROM users WHERE email = $1', [customerEmail]);
+        const serviceProvider = await pool.query('SELECT email FROM service_provider WHERE email = $1', [serviceProviderEmail]);
+
+        // Send email to customer
+        const customerMessage = 'Your booking has been successful and is awaiting confirmation from the service provider.';
+        await sendEmail(customerEmail, 'Booking Successful', customerMessage);
+
+        // Send email to service provider
+        const serviceProviderMessage = `You have been booked for a service. Please log in to your account to make a decision as quickly as possible.`;
+        await sendEmail(serviceProviderEmail, 'New Booking', serviceProviderMessage);
+
+        // Return the newly created booking
+        res.status(201).json(newBooking.rows[0]);
     } catch (error) {
-      console.error('Error creating booking:', error);
-      res.status(500).json({ error: 'An unexpected error occurred' });
+        console.error('Error creating booking:', error);
+        res.status(500).json({ error: 'An unexpected error occurred' });
     }
-  });
+});
+
 
 // Endpoint to get bookings by specific email
 app.get('/bookings/service-provider/:email', async (req, res) => {
