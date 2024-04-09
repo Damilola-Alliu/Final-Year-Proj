@@ -59,6 +59,7 @@ function CustomerOrders() {
                         <p>Customer Email: {booking.customer_email}</p>
                         <p>Notes: {booking.notes}</p>
                         <p>Status: {booking.status}</p>
+                        <p>Service Provider's Email: {booking.service_provider_email}</p>
 
                         <br /> <br />
                         

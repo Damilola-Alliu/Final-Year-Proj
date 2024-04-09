@@ -5,12 +5,12 @@ const WebSocket = require('ws');
 const pool = require('./db');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer')
 
 const { getUserByEmail, createUser } = require('./models/Users');
 const {getServiceProviders} = require('./models/ServiceProvider')
 const {getAllServiceProviders} = require('./models/ServiceProvider')
 const User = require('./models/Users')
-
 
 const app = express();
 const server = http.createServer(app);
@@ -63,6 +63,31 @@ function verifyToken(req, res, next) {
         next();
     });
 }
+
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'damilolaalliu101@gmail.com',
+        pass: 'ueie uobu jnsy djox'
+    }
+})
+
+async function sendEmail(email, subject, text) {
+    try {
+        // Send mail with defined transport object
+        await transporter.sendMail({
+            from: 'damilolaalliu101@gmail.com',
+            to: email,
+            subject: subject,
+            text: text
+        });
+        console.log('Email sent successfully');
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+}
+
 
 
 app.get('/test', (req, res) => {
@@ -290,6 +315,41 @@ app.get('/bookings/customer_email/:email', async (req, res) => {
     }
 });
 
+
+// PUT endpoint to accept or decline a booking
+app.put('/bookings/:id', async (req, res) => {
+    const { id } = req.params;
+    const { status, declineReason } = req.body;
+
+    try {
+        let query;
+        let values;
+        if (status === 'Job Accepted') {
+            query = 'UPDATE bookings SET status = $1 WHERE id = $2';
+            values = [status, id];
+            // Send email to customer here
+            const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
+            const customerEmail = booking.rows[0].customer_email;
+            await sendEmail(customerEmail, 'Booking Accepted', 'Your booking has been accepted.');
+        } else if (status === 'Job Declined') {
+            query = 'UPDATE bookings SET status = $1, decline_reason = $2 WHERE id = $3';
+            values = [status, declineReason, id];
+            // Send email to customer here
+            const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
+            const customerEmail = booking.rows[0].customer_email;
+            await sendEmail(customerEmail, 'Booking Declined', 'Your booking has been declined.');
+        } else {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        await pool.query(query, values);
+
+        res.status(200).json({ message: 'Booking updated successfully' });
+    } catch (error) {
+        console.error('Error updating booking:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 
   

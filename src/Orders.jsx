@@ -10,7 +10,7 @@ function Orders() {
     const fetchBookings = async () => {
         try {
             // Replace 'loggedInServiceProviderEmail' with the email of the logged-in service provider
-            const sp_email = localStorage.getItem('email')
+            const sp_email = localStorage.getItem('email');
             const loggedInServiceProviderEmail = sp_email;
 
             // Make a GET request to fetch bookings for the logged-in service provider
@@ -30,14 +30,51 @@ function Orders() {
         fetchBookings();
     }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
 
+    // Function to handle accepting a task
+    const acceptTask = async (bookingId) => {
+        try {
+            await axios.put(`http://localhost:8000/bookings/${bookingId}`, { status: 'Job Accepted' });
+            // Fetch bookings again to reflect the updated status
+            fetchBookings();
+        } catch (error) {
+            console.error('Error accepting task:', error);
+            // Handle error scenarios
+        }
+    };
 
-    const AcceptTask = () => {
-        console.log('Task Accepted')
-    }
+    // Function to handle declining a task
+    const declineTask = async (bookingId, reason) => {
+        try {
+            await axios.put(`http://localhost:8000/bookings/${bookingId}`, { status: 'Job Declined', declineReason: reason });
+            // Fetch bookings again to reflect the updated status
+            fetchBookings();
+        } catch (error) {
+            console.error('Error declining task:', error);
+            // Handle error scenarios
+        }
+    };
 
-    const DeclineTask = () => {
-        console.log('Task Declined')
-    }
+    // Function to render action statement based on booking status
+    const renderActionStatement = (booking) => {
+        if (booking.status === 'Job Accepted') {
+            return <p>Task Accepted</p>;
+        } else if (booking.status === 'Job Declined') {
+            return <p>Task Declined</p>;
+        }
+        return (
+            <div className="Decline_Accept_button">
+                {/* Accept button */}
+                <button onClick={() => acceptTask(booking.id)}>Accept</button>
+                {/* Decline button */}
+                <button onClick={() => {
+                    const reason = prompt('Please provide a reason for declining:');
+                    if (reason !== null && reason !== '') {
+                        declineTask(booking.id, reason);
+                    }
+                }}>Decline</button>
+            </div>
+        );
+    };
 
     return (
         <>
@@ -62,10 +99,7 @@ function Orders() {
 
                         <br /> <br />
                         
-                        <div className="Decline_Accept_button">
-                            <button onClick={AcceptTask}>Accept</button>
-                            <button onClick={DeclineTask}>Decline</button>
-                        </div>
+                        {renderActionStatement(booking)}
                         
                     </div>
                 ))}
