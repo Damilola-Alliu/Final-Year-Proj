@@ -6,6 +6,7 @@ const pool = require('./db');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer')
+const {saveMessage, getMessages, getCustomerMessages} = require('./models/Messages')
 
 const { getUserByEmail, createUser } = require('./models/Users');
 const {getServiceProviders} = require('./models/ServiceProvider')
@@ -264,7 +265,8 @@ app.post('/bookings', async (req, res) => {
         await sendEmail(customerEmail, 'Booking Successful', customerMessage);
 
         // Send email to service provider
-        const serviceProviderMessage = `You have been booked for a service. Please log in to your account to make a decision as quickly as possible.`;
+        const serviceProviderMessage = `You have been booked for a service.
+        Please log in to your account to make a decision as quickly as possible.`;
         await sendEmail(serviceProviderEmail, 'New Booking', serviceProviderMessage);
 
         // Return the newly created booking
@@ -345,8 +347,41 @@ app.put('/bookings/:id', async (req, res) => {
     }
 });
 
+// Handle sending messages
+app.post('/messages', async (req, res) => {
+    const { senderemail, email, content } = req.body;
+    try {
+        await saveMessage(senderemail, email, content);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Error saving message:", error);
+        res.status(500).json({ error: "Failed to save message" });
+    }
+});
 
-  
+// Handle fetching messages
+app.get('/messages', async (req, res) => {
+    const { sender_email, email } = req.query;
+    try {
+        const messages = await getMessages(sender_email, email);
+        // console.log(sender_email)
+        // console.log(email)
+        res.json(messages);
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).json({ error: "Failed to fetch messages" });
+    }
+});
+
+app.get('/messages/customers', async (req, res) => {
+    try {
+        const customerMessages = await getCustomerMessages();
+        res.json(customerMessages);
+    } catch (error) {
+        console.error("Error fetching customer messages:", error);
+        res.status(500).json({ error: "Failed to fetch customer messages" });
+    }
+});
 
 
 app.get('/protected', verifyToken, (req, res) => {

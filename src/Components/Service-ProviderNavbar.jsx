@@ -32,7 +32,7 @@ function Service_ProvierNavbar() {
                     <NavItem to="/orders">Orders</NavItem>
                     <NavItem to="">Calender</NavItem>
                     <NavItem to="">Payments</NavItem>
-                    <NavItem to="">Comleted Jobs</NavItem>
+                    <NavItem to="/messages">Messages</NavItem>
                     <NavItem to="/bio">Bio</NavItem>
                 </div>
 

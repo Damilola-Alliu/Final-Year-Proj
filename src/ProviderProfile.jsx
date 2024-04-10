@@ -6,17 +6,32 @@ import "./ProviderProfile.css";
 
 function ProviderProfile() {
     const { email } = useParams();
+    const senderemail = localStorage.getItem('email');
     const [providerProfile, setProviderProfile] = useState(null);
     const [providerProfile2, setProviderProfile2] = useState([]);
+    const [showChatPopup, setShowChatPopup] = useState(false); // State to control the display of the chat pop-up
+    const [messages, setMessages] = useState([]); // State to store chat messages
+    const [newMessage, setNewMessage] = useState(""); // State to store the new message being typed
+
+    // Define fetchMessages function outside of useEffect
+    const fetchMessages = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8000/messages?sender_email=${senderemail}&email=${email}`);
+            console.log("The message", response.data)
+            setMessages(response.data);
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        }
+    };
+    
 
     useEffect(() => {
         const fetchProviderProfile = async () => {
             try {
                 const response = await axios.get(`http://localhost:8000/users/${email}`);
                 const response2 = await axios.get(`http://localhost:8000/service-providers/${email}`);
-
-                console.log("Profile 1:", response)
-                console.log("Profile 2:", response2.data)
+                // console.log("Profile 1:", response);
+                // console.log("Profile 2:", response2.data);
                 setProviderProfile(response.data);
                 setProviderProfile2(response2.data);
             } catch (error) {
@@ -27,12 +42,40 @@ function ProviderProfile() {
         fetchProviderProfile();
     }, [email]);
 
+    useEffect(() => {
+        if (showChatPopup) {
+            fetchMessages();
+        }
+    }, [showChatPopup]);
+
     if (!providerProfile || providerProfile2.length === 0) {
         return <div>Loading...</div>;
     }
 
     const BookMeBtn = () => {
-        console.log("Booking form opened")
+        console.log("Booking form opened");
+    };
+
+    const toggleChatPopup = () => {
+        setShowChatPopup(!showChatPopup);
+    };
+
+    const closeChatPopup = () => {
+        setShowChatPopup(false);
+    };
+
+    const sendMessage = async () => {
+        try {
+            await axios.post("http://localhost:8000/messages", {
+                senderemail: senderemail, // Change to the actual sender's ID
+                email: email, // Change to the actual recipient's ID
+                content: newMessage
+            });
+            setNewMessage("");
+            fetchMessages(); // Call fetchMessages directly
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
     };
 
     return (
@@ -51,8 +94,41 @@ function ProviderProfile() {
                     <Link to={`/booking/${email}`}>
                         <button onClick={BookMeBtn}>Book Me</button>
                     </Link>
+
+                    <button onClick={toggleChatPopup}>Chat Me</button>
                 </div>
             </div>
+
+            {/* Render the chat pop-up only when showChatPopup is true */}
+            {showChatPopup && (
+                <div className="overlay" onClick={closeChatPopup}>
+                    <div className="chat-popup" onClick={(e) => e.stopPropagation()}>
+                        <div className="chat-container">
+                            {/* Chat header */}
+                            <div className="chat-header">
+                                <span className="close" onClick={closeChatPopup}>&times;</span>
+                                <h3>Chat with {providerProfile.firstname} {providerProfile.lastName}</h3>
+                            </div>
+                            {/* Chat messages */}
+                            <div className="chat-messages">
+                                {messages.map((message, index) => (
+                                    <div key={index}>{message.content}</div>
+                                ))}
+                            </div>
+                            {/* Chat input */}
+                            <div className="chat-input">
+                                <input
+                                    type="text"
+                                    placeholder="Type your message..."
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                />
+                                <button onClick={sendMessage}>Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
