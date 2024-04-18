@@ -43,5 +43,4 @@ async function createUser(userDetails) {
         throw error;
     }
 }
-
 module.exports = { createUserTable, getUserByEmail, createUser };

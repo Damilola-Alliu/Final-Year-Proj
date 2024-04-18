@@ -81,7 +81,7 @@ function ProviderProfile() {
     return (
         <>
             <CustomerNavbar />
-            <div className="provider-container">
+            {/* <div className="provider-container">
                 <h2>{providerProfile.firstName} {providerProfile.lastName}</h2>
                 <p>Email: {providerProfile.email}</p>
                 <p>Name: {providerProfile.firstname} {providerProfile.lastname}</p>
@@ -97,7 +97,40 @@ function ProviderProfile() {
 
                     <button onClick={toggleChatPopup}>Chat Me</button>
                 </div>
-            </div>
+            </div> */}
+
+<div className="page_content">
+
+        <div className="page_ttl">
+            <h2>{providerProfile.firstname}'s Bio</h2>
+        </div>
+
+        <div className="bio_content">
+            <h3>Name</h3>
+            <p>{providerProfile.firstname} {providerProfile.lastname}</p>
+
+            <h3>Email</h3>
+            <p>{providerProfile.email}</p>
+
+            <h3>Location</h3>
+            <p>{providerProfile2.location}</p>
+
+            <h3>Hourly Rate</h3>
+            <p>GBP{providerProfile2.hourly_rate}/hr</p>
+
+            <h3>Bio Description</h3>
+            <p>{providerProfile2.bio}</p>
+        </div>
+
+        <div className="btn">
+                    <Link to={`/booking/${email}`}>
+                        <button onClick={BookMeBtn}>Book Me</button>
+                    </Link>
+
+                    <button onClick={toggleChatPopup}>Chat Me</button>
+                </div>
+</div>
+
 
             {/* Render the chat pop-up only when showChatPopup is true */}
             {showChatPopup && (

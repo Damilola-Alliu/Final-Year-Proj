@@ -8,7 +8,8 @@ async function createServiceProviderTable() {
         profile_photo VARCHAR(255),
         location VARCHAR(255),
         provided_services TEXT[],
-        hourly_rate INTEGER
+        hourly_rate INTEGER,
+        bio TEXT
     )
     `;
 
@@ -59,8 +60,5 @@ async function getAllServiceProviders() {
         throw error;
     }
 }
-
-
-
 
 module.exports = { createServiceProviderTable, getServiceProviders, getAllServiceProviders };

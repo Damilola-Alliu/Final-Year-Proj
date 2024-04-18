@@ -14,6 +14,16 @@
     margin-top: 45px;
 }
 
+.page_ttl{
+    margin-left: -50px;
+}
+
+.page_content{
+    margin-top: 150px;
+    margin-left: 300px;
+    font-size: larger;
+}
+
 /* ProviderProfile.css */
 
 /* Define a semi-transparent overlay for the entire page */

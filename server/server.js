@@ -142,14 +142,14 @@ app.post('/login', async (req, res) => {
         // console.log('User role:', user.role)
         // console.log('User firstname:', user.firstname)
         // console.log('User lastname:', user.lastname)
-        // console.log('User phoneNumber:', user.phonenumber)
+        // console.log('User phonenumber:', user.phonenumber)
 
         const token = jwt.sign({
             email: user.email, 
             role: user.role, 
             firstname: user.firstname, 
             lastname: user.lastname,
-            phoneNumber: user.phoneNumber
+            phonenumber: user.phonenumber
         }, 
 
             'strong_random_secret', { expiresIn: '1h' });
@@ -165,7 +165,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/signup', async (req, res) => {
     try {
-        const { firstname, lastname, email, role, password, phoneNumber } = req.body;
+        const { firstname, lastname, email, role, password, phonenumber } = req.body;
 
         // Check if user with the same email already exists
         const existingUser = await getUserByEmail(email);
@@ -174,7 +174,7 @@ app.post('/signup', async (req, res) => {
         }
 
         // Create new user if email doesn't exist
-        const newUser = await createUser({ firstname, lastname, email, role, password, phoneNumber });
+        const newUser = await createUser({ firstname, lastname, email, role, password, phonenumber });
         res.status(201).json(newUser);
     } catch (error) {
         console.error('Error creating user:', error);
@@ -366,7 +366,7 @@ app.get('/messages', async (req, res) => {
         const messages = await getMessages(sender_email, email);
         // console.log(sender_email)
         // console.log(email)
-        res.json(messages);
+        res.json(messages); 
     } catch (error) {
         console.error("Error fetching messages:", error);
         res.status(500).json({ error: "Failed to fetch messages" });

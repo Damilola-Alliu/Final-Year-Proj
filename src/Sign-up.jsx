@@ -9,7 +9,7 @@ function Signup() {
         password: "",
         firstname: "",
         lastname: "",
-        phoneNumber: "",
+        phonenumber: "",
         role: "" 
     });
 
@@ -19,14 +19,15 @@ function Signup() {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(formData.phoneNumber)
+        console.log(formData.phonenumber)
 
         try {
             const response = await axios.post("http://localhost:8000/signup", formData);
-            console.log(response.data); 
+            console.log("This is the response:", response.data); 
 
             if (response.data.success) {
                 alert("User profile created successfully");
@@ -93,28 +94,28 @@ function Signup() {
                             required
                         />
 
-                        <label htmlFor="phoneNumber">Phone Number</label>
+                        <label htmlFor="phonenumber">Phone Number</label>
                         <input
                             type="text"
                             placeholder="Enter Phone Number"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
+                            name="phonenumber"
+                            value={formData.phonenumber}
                             onChange={handleChange}
                             required
                         />
 
                         <label htmlFor="role">Role:</label>
                         <select
-                            id="role"
-                            name="role"
-                            value={formData.role}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="customer">Customer</option>
-                            <option value="service-provider">Service Provider</option>
-                        </select>
-
+                                id="role"
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select Role</option>
+                                <option value="customer">Customer</option>
+                                <option value="service-provider">Service Provider</option>
+                            </select>
                         <button type="submit">Sign Up</button>
                     </form>
                 </div>
