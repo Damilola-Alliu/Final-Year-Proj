@@ -315,7 +315,7 @@ app.get('/bookings/customer_email/:email', async (req, res) => {
 // PUT endpoint to accept or decline a booking
 app.put('/bookings/:id', async (req, res) => {
     const { id } = req.params;
-    const { status, declineReason } = req.body;
+    const { status, declineReason, hoursWorked, email } = req.body;
 
     try {
         let query;
@@ -334,6 +334,20 @@ app.put('/bookings/:id', async (req, res) => {
             const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
             const customerEmail = booking.rows[0].customer_email;
             await sendEmail(customerEmail, 'Booking Declined', 'Your booking has been declined.');
+        } else if (status === 'Job Completed') {
+            // Calculate service charge and total charge
+            const serviceProviderData = await pool.query('SELECT * FROM service_provider WHERE email = $1', [email]);
+            const hourlyRate = serviceProviderData.rows[0].hourly_rate;
+            const serviceCharge = hourlyRate * hoursWorked;
+            const totalCharge = serviceCharge * 1.2; // Assuming a 20% additional charge
+            
+            query = 'UPDATE bookings SET status = $1, hours_worked = $2, service_charge = $3, total_charge = $4 WHERE id = $5';
+            values = [status, hoursWorked, serviceCharge, totalCharge, id];
+
+            // Send email to customer with invoice breakdown
+            const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
+            const customerEmail = booking.rows[0].customer_email;
+            await sendInvoiceEmail(customerEmail, serviceCharge, totalCharge);
         } else {
             return res.status(400).json({ error: 'Invalid status' });
         }
@@ -346,6 +360,31 @@ app.put('/bookings/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+// Function to send invoice email to customer
+const sendInvoiceEmail = async (customerEmail, serviceCharge, totalCharge) => {
+    try {
+        // Define email content
+        const mailOptions = {
+            from: 'your_email@example.com',
+            to: customerEmail,
+            subject: 'Invoice for Service',
+            html: `<p>Dear Customer,</p>
+                   <p>Your invoice for the service is as follows:</p>
+                   <p>Service Charge: $${serviceCharge}</p>
+                   <p>Total Charge (including 20% additional charge): $${totalCharge}</p>
+                   <p>Thank you for using our service!</p>`
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
+        console.log('Invoice email sent successfully');
+    } catch (error) {
+        console.error('Error sending invoice email:', error);
+    }
+};
+
+
 
 // Handle sending messages
 app.post('/messages', async (req, res) => {
