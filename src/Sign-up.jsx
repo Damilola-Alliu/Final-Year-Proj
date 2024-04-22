@@ -23,15 +23,19 @@ function Signup() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(formData.phonenumber)
-
+    
         try {
             const response = await axios.post("http://localhost:8000/signup", formData);
             console.log("This is the response:", response.data); 
-
+    
             if (response.data.success) {
+                // Check if the role is customer
+                if (formData.role === "customer") {
+                    // If role is customer, send a POST request to customer_details
+                    await axios.post("http://localhost:8000/customer-details", { email: formData.email });
+                }
+    
                 alert("User profile created successfully");
-                
             } else {
                 setError(response.data.error || "An error occurred while creating user profile");
             }
@@ -40,6 +44,7 @@ function Signup() {
             setError("An error occurred while creating user profile");
         }
     };
+    
 
     return (
         <>

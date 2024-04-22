@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Service_ProvierNavbar from "./Components/Service-ProviderNavbar";
+import Service_ProviderNavbar from "./Components/Service-ProviderNavbar";
 import axios from 'axios'; // Import Axios for making HTTP requests
 import "./Orders.css";
 
@@ -64,43 +64,40 @@ function Orders() {
         }
     };
 
-// Function to handle confirming job completion
-const confirmJobCompletion = async (bookingId, hoursWorked) => {
-    try {
-        // Fetch the service provider's hourly rate
-        const sp_email = localStorage.getItem('email');
-        const serviceProviderData = await axios.get(`http://localhost:8000/service-providers/${sp_email}`);
-        
-        const hourlyRate = serviceProviderData.data.hourly_rate;
+    // Function to handle confirming job completion
+    const confirmJobCompletion = async (bookingId, hoursWorked) => {
+        try {
+            // Fetch the service provider's hourly rate
+            const sp_email = localStorage.getItem('email');
+            const serviceProviderData = await axios.get(`http://localhost:8000/service-providers/${sp_email}`);
+            
+            const hourlyRate = serviceProviderData.data.hourly_rate;
 
-        // Calculate the normal charge
-        const normalCharge = hourlyRate * hoursWorked;
+            // Calculate the normal charge
+            const normalCharge = hourlyRate * hoursWorked;
 
-        // Calculate the service charge as 20% of the normal charge
-        const serviceCharge = 0.2 * normalCharge;
+            // Calculate the service charge as 20% of the normal charge
+            const serviceCharge = 0.2 * normalCharge;
 
-        // Calculate the total charge by adding both the normal charge and the service charge
-        const totalCharge = normalCharge + serviceCharge;
+            // Calculate the total charge by adding both the normal charge and the service charge
+            const totalCharge = normalCharge + serviceCharge;
 
-        // Make a PUT request to update the booking status and provide additional details
-        await axios.put(`http://localhost:8000/bookings/${bookingId}`, {
-            status: 'Job Completed',
-            hoursWorked: hoursWorked,
-            serviceCharge: serviceCharge,
-            totalCharge: totalCharge,
-            email: sp_email
-        });
-        
-        // Fetch bookings again to reflect the updated status
-        fetchBookings();
-    } catch (error) {
-        console.error('Error confirming job completion:', error);
-        // Handle error scenarios
-    }
-};
-
-
-
+            // Make a PUT request to update the booking status and provide additional details
+            await axios.put(`http://localhost:8000/bookings/${bookingId}`, {
+                status: 'Job Completed',
+                hoursWorked: hoursWorked,
+                serviceCharge: serviceCharge,
+                totalCharge: totalCharge,
+                email: sp_email
+            });
+            
+            // Fetch bookings again to reflect the updated status
+            fetchBookings();
+        } catch (error) {
+            console.error('Error confirming job completion:', error);
+            // Handle error scenarios
+        }
+    };
 
     // Function to render action statement based on booking status
     const renderActionStatement = (booking) => {
@@ -108,6 +105,8 @@ const confirmJobCompletion = async (bookingId, hoursWorked) => {
             return <p>Task Accepted</p>;
         } else if (booking.status === 'Job Declined') {
             return <p>Task Declined</p>;
+        } else if (booking.status === 'Job Completed') {
+            return <p>You have completed this job.</p>;
         }
         return (
             <div className="Decline_Accept_button">
@@ -125,71 +124,48 @@ const confirmJobCompletion = async (bookingId, hoursWorked) => {
     };
 
     // Function to handle input change for hours worked
-const handleHoursWorkedChange = (e, index) => {
-    const updatedBookings = [...bookings]; // Create a copy of the bookings array
-    updatedBookings[index] = { ...updatedBookings[index], hoursWorked: e.target.value }; // Update the hoursWorked property for the specific booking
-    setBookings(updatedBookings); // Update the state with the modified array
-};
-
-
-
-    const renderHoursWorkedInput = (booking, index) => {
-        return (
-            <input
-                type="number"
-                placeholder="Hours Worked"
-                value={booking.hoursWorked || ''}
-                onChange={(e) => handleHoursWorkedChange(e, index)} // Pass index to identify the specific booking
-            />
-        );
+    const handleHoursWorkedChange = (e, index) => {
+        const updatedBookings = [...bookings]; // Create a copy of the bookings array
+        updatedBookings[index] = { ...updatedBookings[index], hoursWorked: e.target.value }; // Update the hoursWorked property for the specific booking
+        setBookings(updatedBookings); // Update the state with the modified array
     };
-
 
     return (
         <>
             <div className="orders-page">
                 <div>
-                    <Service_ProvierNavbar />
+                    <Service_ProviderNavbar />
                 </div>
                 <div className="Page_title">
                     Your Orders
                 </div>
             </div>
             <div className="Order-info">
-                
                 {bookings.map((booking, index) => (
                     <div key={index} className="booking-item">
-                        
                         <p>Date: {booking.date}</p>
                         <p>Time: {booking.time}</p>
                         <p>Customer Email: {booking.customer_email}</p>
                         <p>Notes: {booking.notes}</p>
                         <p>Status: {booking.status}</p>
-
                         <br /> <br />
-                        
-                        {/* Inputs for job completion details */}
-                        <input
-                            type="number"
-                            placeholder="Hours Worked"
-                            value={booking.hoursWorked || ''}
-                            onChange={(e) => handleHoursWorkedChange(e, index)}
-                        />
-                        {/* <input
-                            type="number"
-                            placeholder="Service Charge"
-                            value={booking.serviceCharge || ''}
-                            onChange={(e) => booking.serviceCharge = e.target.value}
-                        /> */}
-
+                        {/* Conditional rendering of "Hours Worked" input field */}
+                        {booking.status !== 'Job Completed' && (
+                            <input
+                                type="number"
+                                placeholder="Hours Worked"
+                                value={booking.hoursWorked || ''}
+                                onChange={(e) => handleHoursWorkedChange(e, index)}
+                            />
+                        )}
                         {/* Button to confirm job completion */}
-                        <button onClick={() => confirmJobCompletion(booking.id, booking.hoursWorked, booking.serviceCharge)}>
-                            Confirm Job Completion
-                        </button>
-                        
+                        {booking.status === 'Job Accepted' && (
+                            <button onClick={() => confirmJobCompletion(booking.id, booking.hoursWorked, booking.serviceCharge)}>
+                                Confirm Job Completion
+                            </button>
+                        )}
                         {/* Render action statement */}
                         {renderActionStatement(booking)}
-                        
                     </div>
                 ))}
             </div>

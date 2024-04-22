@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer')
 const {saveMessage, getMessages, getCustomerMessages} = require('./models/Messages')
 
+const {createCustomerDetailsTable, updateCustomerDetails, getCustomerDetailsByEmail} = require('./models/Customer_Details')
+
 const { getUserByEmail, createUser } = require('./models/Users');
 const {getServiceProviders} = require('./models/ServiceProvider')
 const {getAllServiceProviders} = require('./models/ServiceProvider')
@@ -16,6 +18,8 @@ const User = require('./models/Users')
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+const stripe = require('stripe')
+('sk_test_51P7H89B9yZduzV1JgK9R8L8lwQ0u0fdd0zrHx1e2LNCFeGFzyNphfYSCc2h6E4f9q48Kh94UInA4N5FlZMpQku4S00jdYZ9iFI')
 
 app.use(express.json());
 app.use(cors());
@@ -88,6 +92,33 @@ async function sendEmail(email, subject, text) {
         console.error('Error sending email:', error);
     }
 }
+
+async function sendInvoiceEmail(customerEmail, serviceCharge, totalCharge, paymentLink) {
+    try {
+        // Content of the email
+        const mailOptions = {
+            from: 'damilolaalliu101@gmail.com',
+            to: customerEmail,
+            subject: 'Invoice for your booking',
+            html: `
+                <p>Dear Customer,</p>
+                <p>Please find below the details of your invoice:</p>
+                <p>Service Charge: $${serviceCharge}</p>
+                <p>Total Charge: $${totalCharge}(A charge of 20 is added to the service charge)</p>
+                <p>Please click the following link to proceed with the payment:</p>
+                <a href="${paymentLink}">Pay Now</a>
+                <p>Thank you for choosing our service!</p>
+            `
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
+        console.log('Invoice email sent successfully');
+    } catch (error) {
+        console.error('Error sending invoice email:', error);
+    }
+}
+
 
 
 
@@ -163,6 +194,7 @@ app.post('/login', async (req, res) => {
 });
 
 
+// POST endpoint for user signup
 app.post('/signup', async (req, res) => {
     try {
         const { firstname, lastname, email, role, password, phonenumber } = req.body;
@@ -176,11 +208,28 @@ app.post('/signup', async (req, res) => {
         // Create new user if email doesn't exist
         const newUser = await createUser({ firstname, lastname, email, role, password, phonenumber });
         res.status(201).json(newUser);
+
+        // If role is customer, insert email into customer_details table
+        if (role === 'customer') {
+            await insertCustomerDetails(email);
+        }
     } catch (error) {
         console.error('Error creating user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+// Function to insert user's email into customer_details table
+async function insertCustomerDetails(email) {
+    try {
+        const query = 'INSERT INTO customer_details (email) VALUES ($1)';
+        await pool.query(query, [email]);
+        console.log('User email inserted into customer_details table');
+    } catch (error) {
+        console.error('Error inserting user email into customer_details table:', error);
+        throw error;
+    }
+}
 
 app.get('/users/:email', async (req, res) => {
     const { email } = req.params;
@@ -321,33 +370,33 @@ app.put('/bookings/:id', async (req, res) => {
         let query;
         let values;
         if (status === 'Job Accepted') {
-            query = 'UPDATE bookings SET status = $1 WHERE id = $2';
-            values = [status, id];
-            // Send email to customer here
-            const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
-            const customerEmail = booking.rows[0].customer_email;
-            await sendEmail(customerEmail, 'Booking Accepted', 'Your booking has been accepted.');
+            // Your existing logic for accepting the booking
         } else if (status === 'Job Declined') {
-            query = 'UPDATE bookings SET status = $1, decline_reason = $2 WHERE id = $3';
-            values = [status, declineReason, id];
-            // Send email to customer here
-            const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
-            const customerEmail = booking.rows[0].customer_email;
-            await sendEmail(customerEmail, 'Booking Declined', 'Your booking has been declined.');
+            // Your existing logic for declining the booking
         } else if (status === 'Job Completed') {
             // Calculate service charge and total charge
             const serviceProviderData = await pool.query('SELECT * FROM service_provider WHERE email = $1', [email]);
             const hourlyRate = serviceProviderData.rows[0].hourly_rate;
             const serviceCharge = hourlyRate * hoursWorked;
             const totalCharge = serviceCharge * 1.2; // Assuming a 20% additional charge
-            
+
+            // Create Payment Intent with Stripe
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: totalCharge * 100, // Convert totalCharge to cents
+                currency: 'gbp', // Change currency as needed
+                description: 'Payment for service', // Description of the payment
+                // Add any additional parameters as needed
+            });
+
+            // Update booking status and payment details
             query = 'UPDATE bookings SET status = $1, hours_worked = $2, service_charge = $3, total_charge = $4 WHERE id = $5';
             values = [status, hoursWorked, serviceCharge, totalCharge, id];
 
-            // Send email to customer with invoice breakdown
+            // Send email to customer with invoice breakdown and payment link
             const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
             const customerEmail = booking.rows[0].customer_email;
-            await sendInvoiceEmail(customerEmail, serviceCharge, totalCharge);
+            const paymentLink = `http://localhost:5173/checkout?paymentIntentId=${paymentIntent.id}`;
+            await sendInvoiceEmail(customerEmail, serviceCharge, totalCharge, paymentLink);
         } else {
             return res.status(400).json({ error: 'Invalid status' });
         }
@@ -361,28 +410,8 @@ app.put('/bookings/:id', async (req, res) => {
     }
 });
 
-// Function to send invoice email to customer
-const sendInvoiceEmail = async (customerEmail, serviceCharge, totalCharge) => {
-    try {
-        // Define email content
-        const mailOptions = {
-            from: 'your_email@example.com',
-            to: customerEmail,
-            subject: 'Invoice for Service',
-            html: `<p>Dear Customer,</p>
-                   <p>Your invoice for the service is as follows:</p>
-                   <p>Service Charge: $${serviceCharge}</p>
-                   <p>Total Charge (including 20% additional charge): $${totalCharge}</p>
-                   <p>Thank you for using our service!</p>`
-        };
 
-        // Send email
-        await transporter.sendMail(mailOptions);
-        console.log('Invoice email sent successfully');
-    } catch (error) {
-        console.error('Error sending invoice email:', error);
-    }
-};
+
 
 
 
@@ -419,6 +448,39 @@ app.get('/messages/customers', async (req, res) => {
     } catch (error) {
         console.error("Error fetching customer messages:", error);
         res.status(500).json({ error: "Failed to fetch customer messages" });
+    }
+});
+
+
+
+// PUT endpoint to update customer details
+app.put('/customer-details/:email', async (req, res) => {
+    const { email } = req.params;
+    const { streetAddress, city, state, postalCode } = req.body;
+
+    try {
+        await updateCustomerDetails(email, { streetAddress, city, state, postalCode });
+        res.status(200).json({ message: 'Customer details updated successfully' });
+    } catch (error) {
+        console.error('Error updating customer details:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// GET endpoint to fetch customer details
+app.get('/customer-details/:email', async (req, res) => {
+    const { email } = req.params;
+
+    try {
+        const customerDetails = await getCustomerDetailsByEmail(email);
+        res.status(200).json(customerDetails);
+    } catch (error) {
+        if (error.message === 'Customer details not found') {
+            res.status(404).json({ error: 'Customer details not found' });
+        } else {
+            console.error('Error fetching customer details:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 });
 
