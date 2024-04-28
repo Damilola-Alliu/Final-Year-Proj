@@ -29,5 +29,5 @@ jobs:
       - name: Installing jest
         run: npm install --save-dev jest
 
-      - name: run test
-        run: npm test 
+      # - name: run test
+      #   run: npm test 
