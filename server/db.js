@@ -20,13 +20,13 @@ const pool = new Pool({
     //role: process.env.ROLE
 });
 
-pool.connect(function(error) {
-    if(error){
-        throw error
-    }
+// pool.connect(function(error) {
+//     if(error){
+//         throw error
+//     }
 
-    console.log("Connected")
-});
+//     console.log("Connected")
+// });
 
 
 module.exports = pool;

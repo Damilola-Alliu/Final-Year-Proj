@@ -43,4 +43,17 @@ async function createUser(userDetails) {
         throw error;
     }
 }
-module.exports = { createUserTable, getUserByEmail, createUser };
+
+async function getAllUsers(userDetails) {
+    const { firstname, lastname, email, role, password, phonenumber } = userDetails;
+    const query = `
+    SELECT * FROM users
+    `;
+    try {
+        const result = await pool.query(query, [firstname, lastname, email, role, password, phonenumber]);
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+module.exports = { createUserTable, getUserByEmail, createUser, getAllUsers };

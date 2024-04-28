@@ -24,7 +24,31 @@ const stripe = require('stripe')
 app.use(express.json());
 app.use(cors());
 
-// Add your existing routes and middleware here
+function startServer(port) {
+    return new Promise((resolve, reject) => {
+      server.listen(port, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(`Server running on PORT ${port}`);
+          resolve(server);
+        }
+      });
+    });
+  }
+
+  function closeServer() {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log('Server closed');
+          resolve();
+        }
+      });
+    });
+  }
 
 wss.on('connection', (ws) => {
   console.log('A client connected');
@@ -129,7 +153,7 @@ app.get('/test', (req, res) => {
 
 //get all users
 app.get('/users', async (req, res) => {
-    console.log(req)
+    //console.log(req)
     // const { userEmail } = req.params
 
     try {
@@ -491,3 +515,5 @@ app.get('/protected', verifyToken, (req, res) => {
 
 
 app.listen(PORT, ()=> console.log(`Server running on PORT ${PORT}`))
+
+module.exports = {app, startServer, closeServer};
