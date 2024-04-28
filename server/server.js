@@ -229,7 +229,12 @@ app.post('/signup', async (req, res) => {
             return res.status(400).json({ error: 'Email already exists' });
         }
 
-        // Create new user if email doesn't exist
+        // Check if the role is valid ('customer' or 'service-provider')
+        if (role !== 'customer' && role !== 'service-provider') {
+            return res.status(400).json({ error: 'Invalid role.' });
+        }
+
+        // Create new user if email doesn't exist and role is valid
         const newUser = await createUser({ firstname, lastname, email, role, password, phonenumber });
         res.status(201).json(newUser);
 
@@ -393,12 +398,17 @@ app.put('/bookings/:id', async (req, res) => {
     try {
         let query;
         let values;
+
         if (status === 'Job Accepted') {
-            // Your existing logic for accepting the booking
+            // Logic for accepting the booking
+            query = 'UPDATE bookings SET status = $1 WHERE id = $2';
+            values = [status, id];
         } else if (status === 'Job Declined') {
-            // Your existing logic for declining the booking
+            // Logic for declining the booking
+            query = 'UPDATE bookings SET status = $1, decline_reason = $2 WHERE id = $3';
+            values = [status, declineReason, id];
         } else if (status === 'Job Completed') {
-            // Calculate service charge and total charge
+            // Logic for completing the job
             const serviceProviderData = await pool.query('SELECT * FROM service_provider WHERE email = $1', [email]);
             const hourlyRate = serviceProviderData.rows[0].hourly_rate;
             const serviceCharge = hourlyRate * hoursWorked;
@@ -419,12 +429,15 @@ app.put('/bookings/:id', async (req, res) => {
             // Send email to customer with invoice breakdown and payment link
             const booking = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
             const customerEmail = booking.rows[0].customer_email;
+
+            // Construct payment link using paymentIntent.id
             const paymentLink = `http://localhost:5173/checkout?paymentIntentId=${paymentIntent.id}`;
             await sendInvoiceEmail(customerEmail, serviceCharge, totalCharge, paymentLink);
         } else {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
+        // Execute the database query with the prepared query and values
         await pool.query(query, values);
 
         res.status(200).json({ message: 'Booking updated successfully' });
@@ -433,7 +446,6 @@ app.put('/bookings/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 
 
 
