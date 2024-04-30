@@ -10,17 +10,15 @@ function CustomerBio() {
         state: '',
         postalCode: ''
     });
+
     const userEmail = localStorage.getItem('email');
 
     useEffect(() => {
         const fetchCustomerDetails = async () => {
             try {
-                // Make a GET request to retrieve customer details from the backend
                 const response = await axios.get(`http://localhost:8000/customer-details/${userEmail}`);
                 const customerDetails = response.data;
-                console.log(customerDetails)
 
-                // Update the state with the retrieved address
                 setAddress({
                     streetAddress: customerDetails.street_address || '',
                     city: customerDetails.city || '',
@@ -33,7 +31,6 @@ function CustomerBio() {
             }
         };
 
-        // Call the fetchCustomerDetails function only when component mounts
         fetchCustomerDetails();
     }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
 
@@ -47,28 +44,25 @@ function CustomerBio() {
 
     const handleUpdateAddress = async () => {
         try {
-            // Make a PUT request to update the customer's address in the backend
             await axios.put(`http://localhost:8000/customer-details/${userEmail}`, address);
-    
             console.log('Address updated successfully');
-            // Show alert message
-            window.alert('Address updated successfully');
+            // Display alert when address is updated successfully
+            window.alert('Profile update successful');
         } catch (error) {
             console.error('Error updating address:', error);
             // Handle errors here
         }
     };
-    
 
     return (
         <>
             <CustomerNavbar />
-            <div className='pg'>
-                <div className='pg_ttl'>
+            <div className='customer-bio-container'>
+                <div className='page-title'>
                     Your Details
                 </div>
 
-                <div className='home_address'>
+                <div className='home-address'>
                     <div>
                         <label htmlFor="streetAddress">Street Address:</label>
                         <input type="text" id="streetAddress" name="streetAddress" value={address.streetAddress} onChange={handleAddressChange} />
@@ -85,7 +79,7 @@ function CustomerBio() {
                         <label htmlFor="postalCode">Postal Code:</label>
                         <input type="text" id="postalCode" name="postalCode" value={address.postalCode} onChange={handleAddressChange} />
                     </div>
-                    <button onClick={handleUpdateAddress}>Update Address</button>
+                    <button className='update-address-button' onClick={handleUpdateAddress}>Update Address</button>
                 </div>
             </div>
         </>

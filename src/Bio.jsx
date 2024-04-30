@@ -1,155 +1,137 @@
 import React, { useState, useEffect } from 'react';
 import './Bio.css';
 import Service_ProviderNavbar from './Components/Service-ProviderNavbar';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import PlacesAutocomplete, { geocodeByAddress, getLatLng } from 'react-places-autocomplete';
+import axios from 'axios'; // Import axios for making HTTP requests
 
 function Bio() {
-    const [email, setEmail] = useState('');
-    const [profilePhoto, setProfilePhoto] = useState(null);
-    const [location, setLocation] = useState('');
-    const [services, setServices] = useState([""]);
-    const [hourlyRate, setHourlyRate] = useState('');
-    const [address, setAddress] = useState('');
-    const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: 'YOUR_API_KEY',
+    const [serviceProvider, setServiceProvider] = useState({
+        email: '',
+        profilePhoto: null,
+        location: '',
+        services: '', // Update services to a single string
+        hourlyRate: '',
+        bio: ''
     });
-    
+
+    const userEmail = localStorage.getItem('email');
+
     useEffect(() => {
-        // Retrieve email from localStorage
-        const storedEmail = localStorage.getItem('email');
-        if (storedEmail) {
-            setEmail(storedEmail);
-        }
-    }, []);
+        const fetchServiceProviderData = async () => {
+            try {
+                // Make a GET request to retrieve service provider details from the backend
+                const response = await axios.get(`http://localhost:8000/service-providers/${userEmail}`);
+                const serviceProviderData = response.data;
+                console.log(serviceProviderData);
 
-    const handleEmailChange = (e) => {
-        setEmail(e.target.value);
+                // Update the state with the retrieved service provider data
+                setServiceProvider({
+                    email: serviceProviderData.email,
+                    profilePhoto: serviceProviderData.profile_photo || null,
+                    location: serviceProviderData.location || '',
+                    services: serviceProviderData.provided_services || '', // Update services to a single string
+                    hourlyRate: serviceProviderData.hourly_rate
+                    || '',
+                    bio: serviceProviderData.bio || ''
+                });
+            } catch (error) {
+                console.error('Error fetching service provider data:', error);
+                // Handle errors here
+            }
+        };
+
+        // Call the fetchServiceProviderData function only when component mounts
+        fetchServiceProviderData();
+    }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setServiceProvider({
+            ...serviceProvider,
+            [name]: value
+        });
     };
 
-    const handleSelect = async (value) => {
-        setAddress(value);
+    const handleUpdateProfile = async () => {
         try {
-            const results = await geocodeByAddress(value);
-            const latLng = await getLatLng(results[0]);
-            setMapCenter(latLng);
+            // Make a PUT request to update the service provider's profile in the backend
+            await axios.put(`http://localhost:8000/service-providers/${userEmail}`, serviceProvider);
+
+            console.log('Profile updated successfully!');
+            // Show alert message
+            window.alert('Profile updated successfully!');
         } catch (error) {
-            console.error('Error fetching geolocation', error);
+            console.error('Error updating profile:', error);
+            // Handle errors here
         }
-    };
-
-    
-    const handleServiceChange = (index, value) => {
-        const updatedServices = [...services];
-        updatedServices[index] = value;
-        setServices(updatedServices.slice(0, 3)); // Ensure there are only 3 items max
-    };
-
-    const addServiceField = () => {
-        if (services.length < 3) {
-            setServices([...services, ""]);
-        }
-    };
-
-    const handleProfilePhotoChange = (event) => {
-        const photoFile = event.target.files[0];
-        // handle profile photo upload
     };
 
     return (
         <>
             <Service_ProviderNavbar />
-
             <div className='bio-page-title'>
                 Your Bio
             </div>
 
             <div className="sign-up-form">
-                <form>
+                <form onSubmit={handleUpdateProfile}>
                     <label htmlFor="email">Email</label>
                     <input
                         type="email"
-                        placeholder="Enter Email"
+                        id="email"
                         name="email"
-                        value={email}
-                        onChange={handleEmailChange}
+                        value={serviceProvider.email}
+                        onChange={handleInputChange}
                         required
                         disabled
                     />
 
-                    <label htmlFor="profile_photo">Profile Photo</label>
+                    <label htmlFor="profilePhoto">Profile Photo</label>
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={handleProfilePhotoChange}
-                        required
+                        onChange={handleInputChange}
+                        name="profilePhoto"
+                        
                     />
 
                     <label htmlFor="location">Location</label>
-                    <PlacesAutocomplete
-                        value={address}
-                        onChange={setAddress}
-                        onSelect={handleSelect}
-                    >
-                        {({ getInputProps, suggestions, getSuggestionItemProps, loading }) => (
-                            <div>
-                                <input
-                                    {...getInputProps({
-                                        placeholder: 'Enter Location',
-                                        className: 'location-search-input',
-                                    })}
-                                    required
-                                />
-                                <div className="autocomplete-dropdown-container">
-                                    {loading && <div>Loading...</div>}
-                                    {suggestions.map((suggestion) => {
-                                        const className = suggestion.active ? 'suggestion-item--active' : 'suggestion-item';
-                                        return (
-                                            <div
-                                                {...getSuggestionItemProps(suggestion, {
-                                                    className,
-                                                })}
-                                            >
-                                                <span>{suggestion.description}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </PlacesAutocomplete>
+                    <input
+                        type="text"
+                        placeholder="Enter Location"
+                        value={serviceProvider.location}
+                        onChange={handleInputChange}
+                        name="location"
+                        required
+                        disabled
+                    />
 
-                    {isLoaded && (
-                        <GoogleMap
-                            center={mapCenter}
-                            zoom={12}
-                            id="google-map"
-                            mapContainerStyle={{ height: '300px', width: '100%', marginBottom: '20px' }}
-                        ></GoogleMap>
-                    )}
+                    <label htmlFor="services">Services</label>
+                    <input
+                        type="text"
+                        placeholder="Enter Services"
+                        value={serviceProvider.services}
+                        onChange={handleInputChange}
+                        name="services"
+                        required
+                    />
 
-                    {services.map((service, index) => (
-                        <div key={index}>
-                            <label htmlFor={`service-${index}`}>Service {index + 1}</label>
-                            <input
-                                type="text"
-                                placeholder={`Enter Service ${index + 1}`}
-                                value={service}
-                                onChange={(e) => handleServiceChange(index, e.target.value)}
-                                required
-                            />
-                        </div>
-                    ))}
-
-                    <button type="button" onClick={addServiceField}>Add Service</button>
-<br /><br /><br />
-                    <label htmlFor="hourly_rate">Hourly Rate</label>
+                    <label htmlFor="hourlyRate">Hourly Rate</label>
                     <input
                         type="number"
                         placeholder="Enter Hourly Rate"
-                        name="hourly_rate"
+                        value={serviceProvider.hourlyRate}
+                        onChange={handleInputChange}
+                        name="hourlyRate"
+                        required
+                    />
+
+                    <label htmlFor="bio">Bio</label>
+                    <textarea
+                        placeholder="Enter Bio"
+                        value={serviceProvider.bio}
+                        onChange={handleInputChange}
+                        name="bio"
+                        required
                     />
 
                     <button type="submit">Update</button>

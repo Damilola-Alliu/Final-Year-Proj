@@ -9,7 +9,7 @@ function ServiceProvider() {
     const [date, setDate] = useState(new Date()); // State to manage the selected date
 
     const test = 5;
-    const test2 = 10;
+    const test2 = 1;
 
     return (
         <>
@@ -21,12 +21,19 @@ function ServiceProvider() {
                 </div>
 
                 <div className="dashboard-container">
-                    <h2>Orders completed: {test} </h2>
-                    <br />
+    <h2>Dashboard Overview</h2>
+    <div className="dashboard-details">
+        <p>Total Orders Completed: {test}</p>
+        <p>Upcoming Appointments: {test2}</p>
+        
+        <p>Customer Ratings: </p>
+        <p>Service Category: plumber</p>
+        
+        <p>Next Appointment: 2024-04-24</p>
+        
+    </div>
+</div>
 
-                    
-                    
-                </div>
 
 
                 <div className="calendar-title">

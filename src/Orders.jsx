@@ -1,32 +1,33 @@
+// Import React and other necessary modules
 import React, { useState, useEffect } from "react";
 import Service_ProviderNavbar from "./Components/Service-ProviderNavbar";
 import axios from 'axios'; // Import Axios for making HTTP requests
-import "./Orders.css";
+import "./Orders.css"; // Import your CSS file
 
+// Define initial booking state
 const initialBookingState = {
     date: '',
     time: '',
     customer_email: '',
     notes: '',
     status: '',
-    hoursWorked: 0, // Initialize hoursWorked with default value of 0
+    hoursWorked: 0,
     serviceCharge: 0
 };
 
+// Define the Orders component
 function Orders() {
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState([]); // State to store bookings data
 
     // Function to fetch bookings for the logged-in service provider
     const fetchBookings = async () => {
         try {
-            // Replace 'loggedInServiceProviderEmail' with the email of the logged-in service provider
             const sp_email = localStorage.getItem('email');
             const loggedInServiceProviderEmail = sp_email;
 
             // Make a GET request to fetch bookings for the logged-in service provider
             const response = await axios.get(`http://localhost:8000/bookings/service-provider/${loggedInServiceProviderEmail}`);
-            //console.log(response.data)
-
+            
             // Set the retrieved bookings in the state
             setBookings(response.data);
         } catch (error) {
@@ -67,19 +68,12 @@ function Orders() {
     // Function to handle confirming job completion
     const confirmJobCompletion = async (bookingId, hoursWorked) => {
         try {
-            // Fetch the service provider's hourly rate
             const sp_email = localStorage.getItem('email');
             const serviceProviderData = await axios.get(`http://localhost:8000/service-providers/${sp_email}`);
             
             const hourlyRate = serviceProviderData.data.hourly_rate;
-
-            // Calculate the normal charge
             const normalCharge = hourlyRate * hoursWorked;
-
-            // Calculate the service charge as 20% of the normal charge
             const serviceCharge = 0.2 * normalCharge;
-
-            // Calculate the total charge by adding both the normal charge and the service charge
             const totalCharge = normalCharge + serviceCharge;
 
             // Make a PUT request to update the booking status and provide additional details
@@ -109,27 +103,30 @@ function Orders() {
             return <p>You have completed this job.</p>;
         }
         return (
-            <div className="Decline_Accept_button">
-                {/* Accept button */}
-                <button onClick={() => acceptTask(booking.id)}>Accept</button>
-                {/* Decline button */}
-                <button onClick={() => {
-                    const reason = prompt('Please provide a reason for declining:');
-                    if (reason !== null && reason !== '') {
-                        declineTask(booking.id, reason);
-                    }
-                }}>Decline</button>
-            </div>
+            <div className="action-buttons">
+            <button onClick={() => acceptTask(booking.id)} className="action-button accept-button">
+                Accept
+            </button>
+            <button onClick={() => {
+                const reason = prompt('Please provide a reason for declining:');
+                if (reason !== null && reason !== '') {
+                    declineTask(booking.id, reason);
+                }
+            }} className="action-button decline-button">
+                Decline
+            </button>
+        </div>
         );
     };
 
     // Function to handle input change for hours worked
     const handleHoursWorkedChange = (e, index) => {
-        const updatedBookings = [...bookings]; // Create a copy of the bookings array
-        updatedBookings[index] = { ...updatedBookings[index], hoursWorked: e.target.value }; // Update the hoursWorked property for the specific booking
-        setBookings(updatedBookings); // Update the state with the modified array
+        const updatedBookings = [...bookings];
+        updatedBookings[index] = { ...updatedBookings[index], hoursWorked: e.target.value };
+        setBookings(updatedBookings);
     };
 
+    // Return the JSX content
     return (
         <>
             <div className="orders-page">
@@ -149,7 +146,6 @@ function Orders() {
                         <p>Notes: {booking.notes}</p>
                         <p>Status: {booking.status}</p>
                         <br /> <br />
-                        {/* Conditional rendering of "Hours Worked" input field */}
                         {booking.status !== 'Job Completed' && (
                             <input
                                 type="number"
@@ -158,13 +154,11 @@ function Orders() {
                                 onChange={(e) => handleHoursWorkedChange(e, index)}
                             />
                         )}
-                        {/* Button to confirm job completion */}
                         {booking.status === 'Job Accepted' && (
                             <button onClick={() => confirmJobCompletion(booking.id, booking.hoursWorked, booking.serviceCharge)}>
                                 Confirm Job Completion
                             </button>
                         )}
-                        {/* Render action statement */}
                         {renderActionStatement(booking)}
                     </div>
                 ))}
@@ -172,5 +166,6 @@ function Orders() {
         </>
     );
 }
+
 
 export default Orders;

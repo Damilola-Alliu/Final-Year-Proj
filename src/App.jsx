@@ -18,6 +18,7 @@ import CustomerOrder from "./CustomerOrders"
 import Messages from "./Messages";
 import CustomerBio from "./CustomerBio"
 import Checkout from "./Checkout"
+import Review from "./Review"
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/customer_bio" element={<CustomerBio />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/review" element={<Review />} />
       </Routes>
     </Router>
   );

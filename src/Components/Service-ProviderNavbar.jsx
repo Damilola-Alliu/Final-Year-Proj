@@ -30,8 +30,8 @@ function Service_ProvierNavbar() {
                 <div className="nav-links">
                     <NavItem to="/service-provider">Dasboard</NavItem>
                     <NavItem to="/orders">Orders</NavItem>
-                    <NavItem to="">Calender</NavItem>
-                    <NavItem to="">Payments</NavItem>
+                    {/* <NavItem to="">Calender</NavItem>
+                    <NavItem to="">Payments</NavItem> */}
                     <NavItem to="/messages">Messages</NavItem>
                     <NavItem to="/bio">Bio</NavItem>
                 </div>

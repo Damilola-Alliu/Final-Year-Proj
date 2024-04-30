@@ -236,11 +236,15 @@ app.post('/signup', async (req, res) => {
 
         // Create new user if email doesn't exist and role is valid
         const newUser = await createUser({ firstname, lastname, email, role, password, phonenumber });
+
+        // Respond with user creation details
         res.status(201).json(newUser);
 
-        // If role is customer, insert email into customer_details table
+        // Insert into the appropriate table based on the role
         if (role === 'customer') {
             await insertCustomerDetails(email);
+        } else if (role === 'service-provider') {
+            await insertServiceProvider(email);
         }
     } catch (error) {
         console.error('Error creating user:', error);
@@ -259,6 +263,19 @@ async function insertCustomerDetails(email) {
         throw error;
     }
 }
+
+// Function to insert user's email into service_provider table
+async function insertServiceProvider(email) {
+    try {
+        const query = 'INSERT INTO service_provider (email) VALUES ($1)';
+        await pool.query(query, [email]);
+        console.log('User email inserted into service_provider table');
+    } catch (error) {
+        console.error('Error inserting user email into service_provider table:', error);
+        throw error;
+    }
+}
+
 
 app.get('/users/:email', async (req, res) => {
     const { email } = req.params;
@@ -310,7 +327,6 @@ app.get('/service-providers/:email', async (req, res) => {
     const { email } = req.params;
 
     try {
-        // Fetch the service provider based on the email
         const serviceProvider = await pool.query('SELECT * FROM service_provider WHERE email = $1', [email]);
         if (serviceProvider.rows.length === 0) {
             return res.status(404).json({ error: 'Service provider not found' });
@@ -319,6 +335,53 @@ app.get('/service-providers/:email', async (req, res) => {
     } catch (error) {
         console.error("Error fetching service provider by email:", error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+app.put('/service-providers/:email', async (req, res) => {
+    const { email } = req.params;
+    const { profilePhoto, location, services, hourlyRate, bio } = req.body;
+
+    try {
+        // Update the service provider's bio in the database
+        const result = await pool.query(
+            'UPDATE service_provider SET profile_photo = $1, location = $2, provided_services = $3, hourly_rate = $4, bio = $5 WHERE email = $6',
+            [profilePhoto, location, services, hourlyRate, bio, email]
+        );
+
+        if (result.rowCount === 1) {
+            res.status(200).json({ message: 'Service provider bio updated successfully' });
+        } else {
+            res.status(404).json({ error: 'Service provider not found' });
+        }
+    } catch (error) {
+        console.error('Error updating service provider bio:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+app.post('/sp', async (req, res) => {
+    const { email, role } = req.body;
+
+    try {
+        // Perform validation and user creation based on the role
+        if (role === 'service-provider') {
+            // If role is service-provider, insert the email into the service_provider table
+            const serviceProviderResult = await pool.query(
+                'INSERT INTO service_provider (email) VALUES ($1) RETURNING *',
+                [email]
+            );
+
+            res.status(201).json({ success: true, message: 'Service provider profile created successfully', data: serviceProviderResult.rows[0] });
+        } else {
+            // Handle other roles (e.g., customer) if needed
+            res.status(201).json({ success: true, message: 'User profile created successfully' });
+        }
+    } catch (error) {
+        console.error('Error creating user profile:', error);
+        res.status(500).json({ success: false, error: 'An error occurred while creating user profile' });
     }
 });
 
@@ -519,6 +582,64 @@ app.get('/customer-details/:email', async (req, res) => {
         }
     }
 });
+
+
+app.get('/reviews/serviceProvider/:serviceProviderEmail', async (req, res) => {
+    const { serviceProviderEmail } = req.params;
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT * FROM reviews WHERE reviews = $1', [serviceProviderEmail]);
+        const reviews = result.rows;
+        client.release(); 
+        res.json(reviews);
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+app.post('/reviews/serviceProvider/:serviceProviderEmail', async (req, res) => {
+    const { serviceProviderEmail } = req.params;
+    const {
+        rating,
+        serviceType,
+        quality,
+        professionalism,
+        timeliness,
+        comments,
+        customerEmail,
+        jobId
+    } = req.body;
+
+    try {
+        const client = await pool.connect();
+        const queryText = `
+            INSERT INTO reviews (rating, serviceType, quality, professionalism, timeliness, comments, customerEmail, jobId, serviceProviderEmail)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `;
+        const values = [
+            rating,
+            serviceType,
+            quality,
+            professionalism,
+            timeliness,
+            comments,
+            customerEmail,
+            jobId,
+            serviceProviderEmail
+        ];
+
+        await client.query(queryText, values);
+        client.release();
+
+        res.status(201).send('Review submitted successfully');
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        res.status(500).send('Failed to submit review');
+    }
+});
+
 
 
 app.get('/protected', verifyToken, (req, res) => {

@@ -1,77 +1,61 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import CustomerNavbar from "./Components/CustomerNavbar";
-import axios from 'axios'; // Import Axios for making HTTP requests
-import "./CustomerOrders.css"
+import axios from 'axios';
+import "./CustomerOrders.css";
 
 function CustomerOrders() {
     const [bookings, setBookings] = useState([]);
 
-    // Function to fetch bookings for the logged-in service provider
     const fetchBookings = async () => {
         try {
-            // Replace 'loggedInServiceProviderEmail' with the email of the logged-in service provider
-            const customer_email = localStorage.getItem('email')
-            const loggedInCustomerEmail = customer_email;
-
-            // Make a GET request to fetch bookings for the logged-in service provider
-            const response = await axios.get(`http://localhost:8000/bookings/customer_email/${loggedInCustomerEmail}`);
-            console.log(response.data)
-
-            // Set the retrieved bookings in the state
+            const customer_email = localStorage.getItem('email');
+            const response = await axios.get(`http://localhost:8000/bookings/customer_email/${customer_email}`);
             setBookings(response.data);
         } catch (error) {
             console.error('Error fetching bookings:', error);
-            // Handle error scenarios
         }
     };
 
     useEffect(() => {
-        // Fetch bookings when the component mounts
         fetchBookings();
-    }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
-
-
-    // const AcceptTask = () => {
-    //     console.log('Task Accepted')
-    // }
-
-    // const DeclineTask = () => {
-    //     console.log('Task Declined')
-    // }
+    }, []);
 
     return (
-        <>
-            <div className="orders-page">
-                <div>
-                    <CustomerNavbar />
-                </div>
-                <div className="Page_title">
-                    Your Orders
-                </div>
-            </div>
-            <div className="Order-info">
-                
-                {bookings.map((booking, index) => (
-                    <div key={index} className="booking-item">
-                        
-                        <p>Date: {booking.date}</p>
-                        <p>Time: {booking.time}</p>
-                        <p>Customer Email: {booking.customer_email}</p>
-                        <p>Notes: {booking.notes}</p>
-                        <p>Status: {booking.status}</p>
-                        <p>Service Provider's Email: {booking.service_provider_email}</p>
+        <div className="customer-orders-container">
+            <CustomerNavbar />
+            <div className="customer-orders-content">
+                <h1 className="page-title">Your Orders</h1>
+                <div className="booking-list">
+                    {bookings.map((booking, index) => (
+                        <div key={index} className="booking-item">
+                            <p><strong>Date:</strong> {booking.date}</p>
+                            <p><strong>Time:</strong> {booking.time}</p>
+                            <p><strong>Service Provider Email:</strong> {booking.service_provider_email}</p>
+                            <p><strong>Notes:</strong> {booking.notes}</p>
+                            <p><strong>Status:</strong> {booking.status}</p>
 
-                        <br /> <br />
-                        
-                        {/* <div className="Decline_Accept_button">
-                            <button onClick={AcceptTask}>Accept</button>
-                            <button onClick={DeclineTask}>Decline</button>
-                        </div> */}
-                        
-                    </div>
-                ))}
+                            {/* Pass necessary details as URL parameters */}
+                            {booking.status === 'Job Completed' && (
+                                <Link
+                                    to={{
+                                        pathname: "/review",
+                                        state: {
+                                            serviceProviderEmail: booking.service_provider_email,
+                                            customerEmail: localStorage.getItem('email'),
+                                            jobId: booking.id  // Assuming 'id' represents the job ID
+                                        }
+                                    }}
+                                    className="btn review-button"
+                                >
+                                    Review
+                                </Link>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
-        </>
+        </div>
     );
 }
 

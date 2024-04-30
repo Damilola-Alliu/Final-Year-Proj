@@ -25,25 +25,42 @@ function Signup() {
         e.preventDefault();
     
         try {
-            const response = await axios.post("http://localhost:8000/signup", formData);
-            console.log("This is the response:", response.data); 
+            // Submit signup request to create the user profile
+            const signupResponse = await axios.post("http://localhost:8000/signup", formData);
+            console.log("Signup response:", signupResponse.data);
     
-            if (response.data.success) {
-                // Check if the role is customer
-                if (formData.role === "customer") {
-                    // If role is customer, send a POST request to customer_details
-                    await axios.post("http://localhost:8000/customer-details", { email: formData.email });
+            if (signupResponse.data.success) {
+                // Check if the role is service-provider
+                if (formData.role === "service-provider") {
+                    // If role is service-provider, create the service provider profile
+                    const serviceProviderResponse = await axios.post("http://localhost:8000/sp", { email: formData.email });
+                    console.log("Service provider response:", serviceProviderResponse.data);
+    
+                    if (serviceProviderResponse.data.success) {
+                        alert("Service provider profile created successfully");
+                    } else {
+                        alert("Failed to create service provider profile");
+                    }
+                } else {
+                    // If role is customer, create the customer profile
+                    const customerResponse = await axios.post("http://localhost:8000/customer-details", { email: formData.email });
+                    console.log("Customer response:", customerResponse.data);
+    
+                    if (customerResponse.data.success) {
+                        alert("Customer profile created successfully");
+                    } else {
+                        alert("Failed to create customer profile");
+                    }
                 }
-    
-                alert("User profile created successfully");
             } else {
-                setError(response.data.error || "An error occurred while creating user profile");
+                setError(signupResponse.data.error || "An error occurred while creating user profile");
             }
         } catch (error) {
             console.error("Error:", error);
             setError("An error occurred while creating user profile");
         }
     };
+    
     
 
     return (

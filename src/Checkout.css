@@ -42,8 +42,8 @@ label {
     transition: box-shadow 150ms ease;
 }
 
-/* Button */
-button.checkout-button {
+/* Unique Checkout Button */
+.unique-checkout-button {
     display: block;
     width: 100%;
     padding: 10px 20px;
@@ -58,7 +58,6 @@ button.checkout-button {
     transition: background-color 0.3s ease;
 }
 
-button.checkout-button:hover {
+.unique-checkout-button:hover {
     background-color: #0056b3;
 }
-

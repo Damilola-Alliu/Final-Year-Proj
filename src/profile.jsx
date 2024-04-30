@@ -23,10 +23,6 @@ function Profile() {
         }
     };
 
-    const DeleteAccount = () => {
-        console.log('Delete Button Clicked!');
-    };
-
     const EditProfileForm = () => {
        setIsOpen(!isOpen);
     };
@@ -49,14 +45,15 @@ function Profile() {
 
     return (
         <>
-            <div>
+            
                 {renderNavbar() /* Render navbar based on user role */}
-
+                <div className='whole_profile_page'>
                 <div className='profile-page-title'>Your Profile</div>
 
                 <div className='profile-info'>
                     <div>
-                        <button className='edit-profile-btn' onClick={EditProfileForm}>Edit</button>
+                        {/* Edit button to trigger profile edit form */}
+                        
                         {isOpen && (
                             <div className='edit-form'>
                                 <div className='edit-form-content'>
@@ -100,10 +97,10 @@ function Profile() {
                                 Role
                                 <p>{user.role}</p>
                             </li>
+                            <button className='edit-profile-btn' onClick={EditProfileForm}>Edit</button>
                         </>
+                        
                     )}
-
-                    <button onClick={DeleteAccount}>Delete Account</button>
                 </div>
 
                 {error && <div>{error}</div>}

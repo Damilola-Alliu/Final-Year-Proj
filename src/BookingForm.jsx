@@ -43,6 +43,8 @@ function BookingForm() {
       });
 
       console.log('New booking created:', response.data);
+      window.alert('New Booking Created!')
+      window.location.href('/customer')
       // Handle any further actions after successful booking creation
     } catch (error) {
       console.error('Error creating booking:', error);

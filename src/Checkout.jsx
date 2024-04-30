@@ -10,7 +10,7 @@ const CheckoutForm = ({ paymentAmount }) => {
     const stripe = useStripe();
     const elements = useElements();
     const [paymentError, setPaymentError] = useState(null);
-    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false); 
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -56,9 +56,15 @@ const CheckoutForm = ({ paymentAmount }) => {
                     <label>Payment Amount:</label>
                     <span>{paymentAmount} USD</span>
                 </div>
-                <button type="submit" disabled={paymentLoading} className="checkout-button">
-    {paymentLoading ? 'Processing...' : 'Pay Now'}
-</button>
+                // CheckoutForm component
+                    <button
+                        type="submit"
+                        disabled={paymentLoading}
+                        className="unique-checkout-button" // Use the unique class name here
+                    >
+                        {paymentLoading ? 'Processing...' : 'Pay Now'}
+                    </button>
+
                 {paymentError && <div className="payment-error">{paymentError}</div>}
             </form>
         </div>
